@@ -25,8 +25,8 @@ http://www.scilor.com/java-grooveshark-downloader.html, and then get the .zip op
 To include this in your local maven repository, first extract the .zip.
 
 Then run:
-
+```
 mvn install:install-file -Dfile=/path/to/scilorsgrooveapi.jar -DgroupId=com.scilor -DartifactId=GrooveAPI -Dversion=1.0 -Dpackaging=jar
-
+```
 After that, there should be no problems building this using the provided pom.xml
 
