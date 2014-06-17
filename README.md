@@ -5,7 +5,7 @@ An Open Source Java Grooveshark Downloader
 
 
 Based on SciLor's Java Grooveshark API, GrooveGator allows you to download songs on Grooveshark.com to your computer.
-
+(please consider donating to SciLor at http://www.scilor.com/donate.html)
 As long as you have Java installed on your computer, you will be able to run GrooveGator; this means you can run this on Mac, Linux, and Windows!
 
 Disclaimer: 
@@ -29,4 +29,5 @@ Then run:
 mvn install:install-file -Dfile=/path/to/scilorsgrooveapi.jar -DgroupId=com.scilor -DartifactId=GrooveAPI -Dversion=1.0 -Dpackaging=jar
 ```
 After that, there should be no problems building this using the provided pom.xml
+
 
