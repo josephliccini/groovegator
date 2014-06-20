@@ -30,6 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -151,11 +152,11 @@ public class GrooveGator extends JFrame
 		prefs = Preferences.userRoot().node(this.getClass().getName());
 		tabbedPane = new JTabbedPane();
 		tabbedPane.setTabPlacement(JTabbedPane.TOP);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
 		wrapperPanel = new JPanel(new MigLayout("", "[pref!][grow,fill]", "[][c,grow,fill]15[]"));
 		northPanel = new JPanel(new MigLayout("", "[pref!][0:0,grow 80,fill][0:10,grow 5, center][pref!]", "[]15[]"));
 		centerPanel = new JPanel(new BorderLayout());
-		JPanel nestedCenterPanel = new JPanel(new GridLayout(1,1, 5, 5));
 		JPanel nestedSouthPanel = new JPanel(new MigLayout("", "[5%][5%,left][40%,left][50%,center]", ""));
 		centerPanel.setBorder(BorderFactory.createTitledBorder("Results & Queue:"));
 		southPanel = new JPanel(new MigLayout("", "[pref!][0:0,grow 85,fill][0:0,grow 15,fill]", "[]15[]"));
@@ -216,8 +217,9 @@ public class GrooveGator extends JFrame
 
 		resultsScrollPane = new JScrollPane(resultsTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		queueScrollPane = new JScrollPane(queueTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		nestedCenterPanel.add(resultsScrollPane);
-		nestedCenterPanel.add(queueScrollPane);
+		splitPane.add(resultsScrollPane);
+		splitPane.setResizeWeight(0.5);
+		splitPane.add(queueScrollPane);
 		
 		downloadButton = new JButton("Download");
 		downloadButton.addActionListener(new DownloadButtonListener());
@@ -278,7 +280,8 @@ public class GrooveGator extends JFrame
 		northPanel.add(popularSongsButton, "wrap");
 		northPanel.add(searchProgressBar, "span 4, growx");
 		northPanel.setBorder(BorderFactory.createTitledBorder("Query Grooveshark.com"));
-		centerPanel.add(nestedCenterPanel, BorderLayout.CENTER);
+		splitPane.resetToPreferredSizes();
+		centerPanel.add(splitPane, BorderLayout.CENTER);
 		centerPanel.add(nestedSouthPanel, BorderLayout.SOUTH);
 		southPanel.add(downloadButton, "cell 0 1, center, growx 0");
 		southPanel.add(progressBar, "span 2, growx");
