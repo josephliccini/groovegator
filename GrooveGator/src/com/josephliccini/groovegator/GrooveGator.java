@@ -1,11 +1,14 @@
 package com.josephliccini.groovegator;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -196,6 +199,8 @@ public class GrooveGator extends JFrame
 		configureSettingsMenuItem.addActionListener(new ConfigureSettingsMenuItemListener());
 		JMenuItem reconnectMenuItem = new JMenuItem("Reconnect");
 		reconnectMenuItem.addActionListener(new ReconnectMenuItemListener());
+		JMenuItem openDownloadDirectoryMenuItem = new JMenuItem("Open Download Directory...");
+		openDownloadDirectoryMenuItem.addActionListener(new OpenDownloadDirectoryMenuItemListener());
 
 		JMenu aboutMenu = new JMenu("About");
 		JMenuItem aboutMenuItem = new JMenuItem("About this software...");
@@ -204,6 +209,7 @@ public class GrooveGator extends JFrame
 
 		settingsMenu.add(configureSettingsMenuItem);
 		settingsMenu.add(reconnectMenuItem);
+		settingsMenu.add(openDownloadDirectoryMenuItem);
 		menuBar.add(fileMenu);
 		menuBar.add(settingsMenu);
 		menuBar.add(aboutMenu);
@@ -685,6 +691,20 @@ public class GrooveGator extends JFrame
 			searchProgressBar.setIndeterminate(true);
 			PopularSongsTask task = new PopularSongsTask();
 			task.execute();
+		}
+	}
+	
+	private class OpenDownloadDirectoryMenuItemListener implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			String outputPath = prefs.get("OutputDirectory", System.getProperty("user.dir"));
+			try {
+				Desktop.getDesktop().open(new File(outputPath));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 		}
 	}
 	
