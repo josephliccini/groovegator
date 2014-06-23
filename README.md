@@ -3,7 +3,7 @@ groovegator
 
 An Open Source Java Grooveshark Downloader
 
-![Alt text](GrooveGator/GrooveGator_final_About.png?raw=true "Optional Title")
+![Alt text](GrooveGator/src/GrooveGator_final_About.png?raw=true "Optional Title")
 
 
 Based on SciLor's Java Grooveshark API, GrooveGator allows you to download songs on Grooveshark.com to your computer.
