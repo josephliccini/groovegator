@@ -12,13 +12,8 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Vector;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.Preferences;
-
-import javafx.embed.swing.JFXPanel;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -47,6 +42,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.advanced.AdvancedPlayer;
 import net.miginfocom.swing.MigLayout;
 
 import com.scilor.grooveshark.API.Base.GroovesharkAudioStream;
@@ -69,7 +66,6 @@ public class GrooveGator extends JFrame
 	private static AtomicInteger percentageDivisor;
 	private String version = "v0.3";
 	final URL beep = getClass().getResource("/beep.mp3");
-	MediaPlayer mediaPlayer;
 
 	private static AtomicInteger displayPercentage;
 	JTabbedPane tabbedPane;
@@ -128,21 +124,13 @@ public class GrooveGator extends JFrame
 	
 	public static void main(String[] args) 
 	{
-		final CountDownLatch latch = new CountDownLatch(1);
 		SwingUtilities.invokeLater(new Runnable() 
 		{
 			public void run() 
 			{
-				new JFXPanel();
-				latch.countDown();
 				createAndShowGUI();
 			}
 	    });
-		try {
-			latch.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}	
 	
 	private static void createAndShowGUI()
@@ -165,7 +153,6 @@ public class GrooveGator extends JFrame
 	public GrooveGator(String s)
 	{
 		super(s);
-		mediaPlayer = new MediaPlayer(new Media(beep.toString()));
 
 		prefs = Preferences.userRoot().node(this.getClass().getName());
 		tabbedPane = new JTabbedPane();
@@ -415,6 +402,7 @@ public class GrooveGator extends JFrame
 			
 		};
 
+		
 		for(int i = 0; i < 5; ++i)
 		{
 			TableColumn column = table.getColumnModel().getColumn(i);
@@ -488,9 +476,19 @@ public class GrooveGator extends JFrame
 	
 	private void beep()
 	{
-		mediaPlayer.play();
-		mediaPlayer.seek(mediaPlayer.getStartTime());
-		//mediaPlayer.pause();
+		SwingUtilities.invokeLater( new Runnable()
+		{
+			public void run()
+			{
+				AdvancedPlayer player;
+				try {
+					player = new AdvancedPlayer(beep.openStream());
+					player.play();
+				} catch (JavaLayerException | IOException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 	
 	private class ConfigureSettingsMenuItemListener implements ActionListener
