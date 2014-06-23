@@ -1,5 +1,6 @@
 package com.josephliccini.groovegator;
 
+import java.awt.HeadlessException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -7,6 +8,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.prefs.Preferences;
+
+import javax.swing.JOptionPane;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -83,12 +86,6 @@ public class GrooveGatorHelpers {
 		if ((index = prefString.lastIndexOf("/")) > 0)
 		{
 			filename = prefString.substring(index+1);
-			filename = StringUtils.replace(filename, "<artist>", StringUtils.remove(StringUtils.remove(song.ArtistName, '/'), '\\'));
-			filename = StringUtils.replace(filename, "<song>", StringUtils.remove(StringUtils.remove(song.SongName, '/'), '\\'));
-			filename = StringUtils.replace(filename, "<album>", StringUtils.remove(StringUtils.remove(song.AlbumName, '/'), '\\'));
-			filename = StringUtils.replace(filename, "<year>", StringUtils.remove(StringUtils.remove(song.Year, '/'), '\\'));
-			filename = StringUtils.replace(filename, "<tracknum>", StringUtils.remove(StringUtils.remove(song.TrackNum, '/'), '\\'));
-			
 			path = prefString.substring(0, index);
 			path = StringUtils.replace(path, "<artist>", StringUtils.remove(StringUtils.remove(song.ArtistName, '/'), '\\'));
 			path = StringUtils.replace(path, "<song>", StringUtils.remove(StringUtils.remove(song.SongName, '/'), '\\'));
@@ -98,32 +95,42 @@ public class GrooveGatorHelpers {
 		}
 		else
 		{
-			prefString = StringUtils.replace(prefString, "<artist>", StringUtils.remove(StringUtils.remove(song.ArtistName, '/'), '\\'));
-			prefString = StringUtils.replace(prefString, "<song>", StringUtils.remove(StringUtils.remove(song.SongName, '/'), '\\'));
-			prefString = StringUtils.replace(prefString, "<album>", StringUtils.remove(StringUtils.remove(song.AlbumName, '/'), '\\'));
-			prefString = StringUtils.replace(prefString, "<year>", StringUtils.remove(StringUtils.remove(song.Year, '/'), '\\'));
-			prefString = StringUtils.replace(prefString, "<tracknum>", StringUtils.remove(StringUtils.remove(song.TrackNum, '/'), '\\'));
 			filename = prefString;
 		}
+		filename = StringUtils.replace(filename, "<artist>", StringUtils.remove(StringUtils.remove(song.ArtistName, '/'), '\\'));
+		filename = StringUtils.replace(filename, "<song>", StringUtils.remove(StringUtils.remove(song.SongName, '/'), '\\'));
+		filename = StringUtils.replace(filename, "<album>", StringUtils.remove(StringUtils.remove(song.AlbumName, '/'), '\\'));
+		filename = StringUtils.replace(filename, "<year>", StringUtils.remove(StringUtils.remove(song.Year, '/'), '\\'));
+		filename = StringUtils.replace(filename, "<tracknum>", StringUtils.remove(StringUtils.remove(song.TrackNum, '/'), '\\'));
+			
 		System.out.println("Filename: " + filename);
 		System.out.println("Path: " + path);
 		
-		StringBuilder builder = new StringBuilder("");
-		for (int i=0; i<filename.length() && i < 255; ++i) 
-		{
-			try {
-				new File(filename.charAt(i) + "").getCanonicalFile();
-				if (filename.charAt(i) != '/' && filename.charAt(i) != '\\') 
-				{
-					builder.append(filename.charAt(i));
-				}
-			} catch(Exception ex) {System.out.println("Exception"); }
-		}
-
+		filename = filename.replace("\"", "");
 		String rootDownloadDirectoryPath = prefs.get("OutputDirectory", System.getProperty("user.dir"));
 		File pathDirectory = new File(rootDownloadDirectoryPath, path);
+		if ((pathDirectory.getAbsolutePath() + "/" + filename).length() > 255)
+			return fixLength(pathDirectory, filename).toString();
 		pathDirectory.mkdirs();
-		return path + "/" +  builder.toString().replace("\"", "");
+		return pathDirectory.toString() + "/" + filename;
+	}
+	
+	private static String fixLength(File pathDirectory, String filename)
+	{
+		File temp = new File(pathDirectory, filename);
+		try {
+			if (temp.getCanonicalPath().length() > 255)
+			{
+				temp = new File(temp.getCanonicalPath().substring(0, 250));
+				JOptionPane.showMessageDialog(null, "Path and Filename for song: \n" + filename + "\n" 
+						+ "Are too long... shortening filename, you can find your file at:\n"
+						+ temp.getCanonicalPath());
+			}
+		} catch (HeadlessException | IOException e) {
+			e.printStackTrace();
+		}
+		temp.getParentFile().mkdirs();
+		return temp.toString();
 	}
 	
 	public static GroovesharkClient getClient()

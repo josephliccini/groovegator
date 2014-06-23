@@ -2,7 +2,6 @@ package com.josephliccini.groovegator;
 
 import java.awt.BorderLayout;
 import java.awt.Desktop;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,8 +12,13 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.Preferences;
+
+import javafx.embed.swing.JFXPanel;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -63,7 +67,9 @@ public class GrooveGator extends JFrame
 	private PlaylistResult[] playlistResults;
 	private static AtomicInteger songsToBeDownloaded;
 	private static AtomicInteger percentageDivisor;
-	private String version = "v0.1";
+	private String version = "v0.3";
+	final URL beep = getClass().getResource("/beep.mp3");
+	MediaPlayer mediaPlayer;
 
 	private static AtomicInteger displayPercentage;
 	JTabbedPane tabbedPane;
@@ -120,13 +126,23 @@ public class GrooveGator extends JFrame
 	JFrame settingsFrame;
 	Preferences prefs;
 	
-	public static void main(String[] args)
+	public static void main(String[] args) 
 	{
-		 SwingUtilities.invokeLater(new Runnable() {
-		        public void run() {
-		          createAndShowGUI();
-		        }
-		    });
+		final CountDownLatch latch = new CountDownLatch(1);
+		SwingUtilities.invokeLater(new Runnable() 
+		{
+			public void run() 
+			{
+				new JFXPanel();
+				latch.countDown();
+				createAndShowGUI();
+			}
+	    });
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}	
 	
 	private static void createAndShowGUI()
@@ -149,6 +165,8 @@ public class GrooveGator extends JFrame
 	public GrooveGator(String s)
 	{
 		super(s);
+		mediaPlayer = new MediaPlayer(new Media(beep.toString()));
+
 		prefs = Preferences.userRoot().node(this.getClass().getName());
 		tabbedPane = new JTabbedPane();
 		tabbedPane.setTabPlacement(JTabbedPane.TOP);
@@ -166,8 +184,8 @@ public class GrooveGator extends JFrame
 		loginPanel.setBorder(BorderFactory.createTitledBorder("Grooveshark\u2122 Login"));
 		playlistPanel = new JPanel(new MigLayout("", "[pref!][grow 100][pref!]", "[]10[]"));
 		playlistPanel.setBorder(BorderFactory.createTitledBorder("Playlist by ID"));
-
-		this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/com/josephliccini/groovegator/GrooveGator_final_32.png")));
+		
+		this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/GrooveGator_final_32.png")));
 
 		tableHeaders = new Object[] {"", "No.", "Song  Name", "Artist Name", "Album Name"};
 		resultsTableValues = new Object[0][0];
@@ -339,11 +357,10 @@ public class GrooveGator extends JFrame
 		System.out.println("Download: " + song.ArtistName + " - " + song.Name);
 		try {
 			GroovesharkAudioStream stream = GrooveGatorHelpers.getClient().GetMusicStream(song.SongID);
-			String filename = GrooveGatorHelpers.fixFilename(song);
-			filename+=".mp3";
+			String outputFile = GrooveGatorHelpers.fixFilename(song);
+			outputFile+=".mp3";
 			
-			String outputPath = prefs.get("OutputDirectory", System.getProperty("user.dir"));
-			FileOutputStream writer = new FileOutputStream(outputPath + "/" + filename);
+			FileOutputStream writer = new FileOutputStream(new File(outputFile));
 			int readBytes = 0;
 			int pos=0;
 			int percentage = 0;
@@ -359,7 +376,7 @@ public class GrooveGator extends JFrame
 				percentage = (100 * pos / (stream.Length() - 1));
 				if (percentage > prevPercentage + 4) 
 				{
-					lastOutput = percentage + "%" + " \"" + filename + "\"";
+					lastOutput = percentage + "%" + " \"" + outputFile + "\"";
 					System.out.println(lastOutput);
 					displayPercentage.addAndGet(-prevPercentage / percentageDivisor.get());
 					prevPercentage = percentage;
@@ -469,6 +486,13 @@ public class GrooveGator extends JFrame
 		}
 	}
 	
+	private void beep()
+	{
+		mediaPlayer.play();
+		mediaPlayer.seek(mediaPlayer.getStartTime());
+		//mediaPlayer.pause();
+	}
+	
 	private class ConfigureSettingsMenuItemListener implements ActionListener
 	{
 		public void actionPerformed(ActionEvent e)
@@ -576,7 +600,7 @@ public class GrooveGator extends JFrame
 					+ "A huge thanks to SciLor and his API, without his help GrooveGator would not be possible!\n"
 					+ "Please consider donating to SciLor at: http://www.scilor.com/donate.html\n";
 			
-			ImageIcon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/com/josephliccini/groovegator/GrooveGator_final_About.png")));
+			ImageIcon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/GrooveGator_final_About.png")));
 			JOptionPane.showMessageDialog(centerPanel, message, "About this software", JOptionPane.INFORMATION_MESSAGE, icon);
 		}
 	}
@@ -734,7 +758,7 @@ public class GrooveGator extends JFrame
 			resultsInQueue.remove(this.song);
 			songsToBeDownloaded.getAndDecrement();
 		
-			Toolkit.getDefaultToolkit().beep();
+			beep();
 
             //Java will release this song from memory so it can be played right away
             this.song = null;
@@ -795,7 +819,7 @@ public class GrooveGator extends JFrame
 		@Override
 		public void done()
 		{
-			Toolkit.getDefaultToolkit().beep();
+			beep();
 			searchProgressBar.setIndeterminate(false);
 			searchButton.setEnabled(true);
 		}
@@ -824,7 +848,6 @@ public class GrooveGator extends JFrame
 				playlistResults = playlists;
 				for (PlaylistResult p: playlists)
 					playlistComboBox.addItem(p.Name);
-				Toolkit.getDefaultToolkit().beep();
 			} catch (Exception e1) {
 				System.out.println("Client could not login user or pass");
 			}
@@ -836,7 +859,7 @@ public class GrooveGator extends JFrame
 		{
 			loginButton.setEnabled(true);
 			playlistProgressBar.setIndeterminate(false);
-			Toolkit.getDefaultToolkit().beep();
+			beep();
 		}
 	}	
 	
@@ -863,7 +886,7 @@ public class GrooveGator extends JFrame
 			copyPlaylistByIdToSearchButton.setEnabled(true);
 			copyPlaylistToSearchButton.setEnabled(true);
 			playlistProgressBar.setIndeterminate(false);
-			Toolkit.getDefaultToolkit().beep();
+			beep();
 		}
 	}	
 	
@@ -887,9 +910,8 @@ public class GrooveGator extends JFrame
 		{
 			popularSongsButton.setEnabled(true);
 			searchProgressBar.setIndeterminate(false);
-			Toolkit.getDefaultToolkit().beep();
+			beep();
 		}
-		
 	}
 }
 	

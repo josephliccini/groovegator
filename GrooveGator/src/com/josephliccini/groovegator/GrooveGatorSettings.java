@@ -57,7 +57,7 @@ public class GrooveGatorSettings extends JFrame implements WindowFocusListener {
 		super(s);
 		this.setLayout(new BorderLayout());
 		this.addWindowFocusListener(this);
-		this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/com/josephliccini/groovegator/GrooveGator_final_32.png")));
+		this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/GrooveGator_final_32.png")));
 		prefs = Preferences.userRoot().node(GrooveGator.class.getName());
 		
 		outputDirectoryPanel = new JPanel(new MigLayout("", "[pref!][0:0,grow 85,fill][0:0,grow 15,fill]", "[]15[]"));
